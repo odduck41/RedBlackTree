@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 typedef int NodeType;
 
@@ -139,72 +140,113 @@ void rightRotate(RBTree* const tree, Node* const node) {
 #define getColor(node) (node==NULL?(black):(node->color))
 #define setColor(node, col) ((node==NULL)?(node->color):(node->color=col))
 
-__attribute__((always_inline))
-inline void case1(RBTree*, Node*);
 
-__attribute__((always_inline))
-inline void case2(RBTree*, Node*);
+void fixup(RBTree* tree, Node* node);
 
-void case3(RBTree*, Node*);
+// inline void case1(RBTree*, Node*);
+// inline void case2(RBTree*, Node*);
+// void case3(RBTree*, Node*);
+// void case4(RBTree*, Node*);
+// void case5(RBTree*, const Node*);
 
-__attribute__((always_inline))
-inline void case4(RBTree*, Node*);
+#define case5(tree,node) (\
+setColor(node->parent, black),\
+setColor(granny(node), red),\
+(granny(node)->left==node->parent?rightRotate(tree, node->parent):leftRotate(tree,node->parent)),\
+fixup(tree, node->parent)\
+)
 
-__attribute__((always_inline))
-inline void case5(RBTree*, Node*);
+#define case4(tree,node) (\
+    (granny(node)->left == node->parent && node->parent->right == node)?\
+        leftRotate(tree,node),(case5(tree,node->left))\
+    :\
+        (\
+            granny(node)->right == node->parent && node->parent->left == node?\
+                rightRotate(tree, node),(case5(tree,node->left))\
+                :\
+                case5(tree,node)\
+        )\
+)
 
-__attribute__((always_inline))
-inline void case1(RBTree* tree, Node* node) {
-    if (node->parent == NULL) {
-        node->color = black;
-        return;
-    }
-    case2(tree, node);
-}
+#define case3(tree, node) (\
+    getColor(uncle(node)) == red?\
+        (\
+            setColor(node,red),\
+            setColor(granny(node),red),\
+            setColor(uncle(node),black),\
+            setColor(node->parent,black),\
+            fixup(tree,granny(node))\
+        )\
+    :\
+        (case4(tree,node))\
+)
 
-__attribute__((always_inline))
-inline void case2(RBTree* tree, Node* node) {
-    if (getColor(node->parent) == black) {
-        return;
-    }
-    case3(tree, node);
-}
+#define case2(tree, node) (\
+    getColor(node->parent)==black?\
+        (node->color)\
+    :\
+        (case3(tree, node))\
+)
 
-void case3(RBTree* tree, Node* node) {
-    if (getColor(uncle(node)) == red) {
-        setColor(node, red);
-        setColor(granny(node), red);
-        setColor(uncle(node), black);
-        setColor(node->parent, black);
-        case1(tree, granny(node));
-        return;
-    }
-    case4(tree, node);
-}
+#define case1(tree, node) (\
+    (node->parent==NULL)?\
+        (node->color=black)\
+    :\
+        (case2(tree,node))\
+)
 
-__attribute__((always_inline))
-inline void case4(RBTree* tree, Node* node) {
-    if (granny(node)->left == node->parent && node->parent->right == node) {
-        leftRotate(tree, node);
-        node = node->left;
-    } else if (granny(node)->right == node->parent && node->parent->left == node) {
-        rightRotate(tree, node);
-        node = node->right;
-    }
-    case5(tree, node);
-}
+// __attribute__((always_inline))
+// inline void case1(RBTree* tree, Node* node) {
+//     if (node->parent == NULL) {
+//         node->color = black;
+//         return;
+//     }
+//     case2(tree, node);
+// }
+//
+// __attribute__((always_inline))
+// inline void case2(RBTree* tree, Node* node) {
+//     if (getColor(node->parent) == black) {
+//         return;
+//     }
+//     case3(tree, node);
+// }
 
-__attribute__((always_inline))
-inline void case5(RBTree* tree, Node* node) {
-    setColor(node->parent, black);
-    setColor(granny(node), red);
-    if (granny(node)->left == node->parent) {
-        rightRotate(tree, node->parent);
-    } else {
-        leftRotate(tree, node->parent);
-    }
-    case1(tree, node->parent);
-}
+// void case3(RBTree* tree, Node* node) {
+//     if (getColor(uncle(node)) == red) {
+//         setColor(node, red);
+//         setColor(granny(node), red);
+//         setColor(uncle(node), black);
+//         setColor(node->parent, black);
+//         case1(tree, granny(node));
+//         return;
+//     }
+//     case4(tree, node);
+// }
+
+// __attribute__((always_inline))
+// inline void case4(RBTree* tree, Node* node) {
+//     if (granny(node)->left == node->parent && node->parent->right == node) {
+//         leftRotate(tree, node);
+//         node = node->left;
+//     } else if (granny(node)->right == node->parent && node->parent->left == node) {
+//         rightRotate(tree, node);
+//         node = node->right;
+//     }
+//     case5(tree, node);
+// }
+
+// __attribute__((always_inline))
+// inline void case5(RBTree* tree, const Node* node) {
+//     setColor(node->parent, black);
+//     setColor(granny(node), red);
+//     if (granny(node)->left == node->parent) {
+//         rightRotate(tree, node->parent);
+//     } else {
+//         leftRotate(tree, node->parent);
+//     }
+//     case1(tree, node->parent);
+// }
 
 __attribute__((always_inline))
 inline void fixup(RBTree* tree, Node* node) {
@@ -253,11 +295,18 @@ Node* insert(RBTree* tree, const NodeType val) {
     return node;
 }
 
+
 int main() {
     RBTree t;
     t.root = NULL;
-    insert(&t, 5);
-    insert(&t, 6);
-    insert(&t, 4);
-    insert(&t, 7);
+    clock_t begin = clock();
+
+    for (int i = 0; i < 100000000; ++i) {
+        insert(&t, i);
+        // printf("%d\n", i);
+    }
+
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("%lf", time_spent);
 }

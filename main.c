@@ -85,6 +85,172 @@ void rightRotate(RBTree* const tree, Node* const node) {
     node->right->parent = node;
 }
 
-int main() {
+#define granny(node) (\
+    node==NULL?\
+        NULL\
+    :\
+        (\
+        node->parent==NULL?\
+            NULL\
+        :\
+            node->parent->parent\
+        )\
+)
 
+// inline Node* granny(const Node* const node) {
+//     if (node == NULL) return NULL;
+//     if (node->parent == NULL) return NULL;
+//     return node->parent->parent;
+// }
+
+#define uncle(node) (\
+    node==NULL?\
+        NULL\
+    :\
+        (\
+            node->parent==NULL?\
+                NULL\
+            :\
+                (\
+                    granny(node)==NULL?\
+                        NULL\
+                    :\
+                        (\
+                            granny(node)->left == node->parent?\
+                                granny(node)->right\
+                            :\
+                                granny(node)->left\
+                        )\
+                )\
+        )\
+)
+
+// inline Node* uncle(const Node* const node) {
+//     if (node == NULL) return NULL;
+//     if (node->parent == NULL) return NULL;
+//     if (granny(node) == NULL) return NULL;
+//     if (granny(node)->left == node->parent) {
+//         return granny(node)->right;
+//     } else {
+//         return granny(node)->left;
+//     }
+// }
+
+#define getColor(node) (node==NULL?(black):(node->color))
+#define setColor(node, col) ((node==NULL)?(node->color):(node->color=col))
+
+inline void case1(RBTree*, Node*);
+inline void case2(RBTree*, Node*);
+void case3(RBTree*, Node*);
+inline void case4(RBTree*, Node*);
+inline void case5(RBTree*, Node*);
+
+__attribute__((always_inline))
+inline void case1(RBTree* tree, Node* node) {
+    if (node->parent == NULL) {
+        node->color = black;
+        return;
+    }
+    case2(tree, node);
+}
+
+__attribute__((always_inline))
+inline void case2(RBTree* tree, Node* node) {
+    if (getColor(node->parent) == black) {
+        return;
+    }
+    case3(tree, node);
+}
+
+
+inline void case3(RBTree* tree, Node* node) {
+    if (getColor(uncle(node)) == red) {
+        setColor(node, red);
+        setColor(granny(node), red);
+        setColor(uncle(node), black);
+        setColor(node->parent, black);
+        case1(tree, granny(node));
+        return;
+    }
+    case4(tree, node);
+}
+
+__attribute__((always_inline))
+inline void case4(RBTree* tree, Node* node) {
+    if (granny(node)->left == node->parent && node->parent->right == node) {
+        leftRotate(tree, node);
+        node = node->left;
+    } else if (granny(node)->right == node->parent && node->parent->left == node) {
+        rightRotate(tree, node);
+        node = node->right;
+    }
+    case5(tree, node);
+}
+
+__attribute__((always_inline))
+inline void case5(RBTree* tree, Node* node) {
+    setColor(node->parent, black);
+    setColor(granny(node), red);
+    if (granny(node)->left == node->parent) {
+        rightRotate(tree, node->parent);
+    } else {
+        leftRotate(tree, node->parent);
+    }
+    case1(tree, node->parent);
+}
+
+__attribute__((always_inline))
+inline void fixup(RBTree* tree, Node* node) {
+    case1(tree, node);
+}
+
+Node* insert(RBTree* tree, const NodeType val) {
+    Node* node = malloc(sizeof(Node));
+    node->value = val;
+    node->color = red;
+    node->parent = node->left = node->right = NULL;
+
+    if (tree->root == NULL) {
+        tree->root = node;
+        fixup(tree, node);
+        return node;
+    }
+
+    Node* parent = tree->root;
+    Node* me = NULL;
+
+    do {
+        if (parent->value == val) {
+            me = parent;
+        } else if (parent->value < val) {
+            me = parent->right;
+        } else {
+            me = parent->left;
+        }
+    } while (me != NULL && me != parent && (parent = me, 1));
+
+    if (parent->value == val) {
+        free(node);
+        return parent;
+    }
+
+    if (parent->value < val) {
+        parent->right = node;
+    } else {
+        parent->left = node;
+    }
+    node->parent = parent;
+
+    fixup(tree, node);
+
+    return node;
+}
+
+int main() {
+    RBTree t;
+    t.root = NULL;
+    insert(&t, 5);
+    insert(&t, 6);
+    insert(&t, 4);
+    insert(&t, 7);
 }

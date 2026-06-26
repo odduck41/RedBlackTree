@@ -85,56 +85,23 @@ void rightRotate(RBTree* const tree, Node* const node) {
     node->right->parent = node;
 }
 
-#define granny(node) (\
-    node==NULL?\
-        NULL\
-    :\
-        (\
-        node->parent==NULL?\
-            NULL\
-        :\
-            node->parent->parent\
-        )\
-)
+__attribute__((always_inline))
+inline Node* granny(const Node* const node) {
+    if (node == NULL) return NULL;
+    if (node->parent == NULL) return NULL;
+    return node->parent->parent;
+}
 
-// inline Node* granny(const Node* const node) {
-//     if (node == NULL) return NULL;
-//     if (node->parent == NULL) return NULL;
-//     return node->parent->parent;
-// }
-
-#define uncle(node) (\
-    node==NULL?\
-        NULL\
-    :\
-        (\
-            node->parent==NULL?\
-                NULL\
-            :\
-                (\
-                    granny(node)==NULL?\
-                        NULL\
-                    :\
-                        (\
-                            granny(node)->left == node->parent?\
-                                granny(node)->right\
-                            :\
-                                granny(node)->left\
-                        )\
-                )\
-        )\
-)
-
-// inline Node* uncle(const Node* const node) {
-//     if (node == NULL) return NULL;
-//     if (node->parent == NULL) return NULL;
-//     if (granny(node) == NULL) return NULL;
-//     if (granny(node)->left == node->parent) {
-//         return granny(node)->right;
-//     } else {
-//         return granny(node)->left;
-//     }
-// }
+__attribute__((always_inline))
+inline Node* uncle(const Node* const node) {
+    if (node == NULL) return NULL;
+    if (node->parent == NULL) return NULL;
+    if (granny(node) == NULL) return NULL;
+    if (granny(node)->left == node->parent) {
+        return granny(node)->right;
+    }
+    return granny(node)->left;
+}
 
 #define getColor(node) (node==NULL?(black):(node->color))
 #define setColor(node, col) ((node==NULL)?(node->color):(node->color=col))
@@ -151,7 +118,7 @@ __attribute__((always_inline))
 inline void case4(RBTree*, Node*);
 
 __attribute__((always_inline))
-inline void case5(RBTree*, Node*);
+inline void case5(RBTree*, const Node*);
 
 __attribute__((always_inline))
 inline void case1(RBTree* tree, Node* node) {
@@ -195,7 +162,7 @@ inline void case4(RBTree* tree, Node* node) {
 }
 
 __attribute__((always_inline))
-inline void case5(RBTree* tree, Node* node) {
+inline void case5(RBTree* tree, const Node* node) {
     setColor(node->parent, black);
     setColor(granny(node), red);
     if (granny(node)->left == node->parent) {

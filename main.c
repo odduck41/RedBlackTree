@@ -1,7 +1,21 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 typedef int NodeType;
+
+int less(const NodeType a, const NodeType b) {
+    return a < b;
+}
+
+int eq(const NodeType a, const NodeType b) {
+    return a == b;
+}
+
+int bigger(const NodeType a, const NodeType b) {
+    return a > b;
+}
 
 typedef enum Color {
     red,
@@ -151,6 +165,8 @@ void case3(RBTree* tree, Node* node) {
 
 __attribute__((always_inline))
 inline void case4(RBTree* tree, Node* node) {
+    if (granny(node) == NULL) __builtin_unreachable();
+
     if (granny(node)->left == node->parent && node->parent->right == node) {
         leftRotate(tree, node);
         node = node->left;
@@ -163,6 +179,8 @@ inline void case4(RBTree* tree, Node* node) {
 
 __attribute__((always_inline))
 inline void case5(RBTree* tree, const Node* node) {
+    if (granny(node) == NULL) __builtin_unreachable();
+
     setColor(node->parent, black);
     setColor(granny(node), red);
     if (granny(node)->left == node->parent) {
@@ -220,11 +238,28 @@ Node* insert(RBTree* tree, const NodeType val) {
     return node;
 }
 
+const Node* find(const RBTree* const tree, const NodeType key) {
+    const Node* me = tree->root;
+    do {
+        if (me->value < key) me = me->right;
+        if (me->value > key) me = me->left;
+    } while (me != NULL && me->value != key);
+
+    return me;
+}
+
+
+
 int main() {
     RBTree t;
     t.root = NULL;
-    insert(&t, 5);
-    insert(&t, 6);
-    insert(&t, 4);
-    insert(&t, 7);
+    const clock_t begin = clock();
+
+    for (int i = 0; i < 100000000; ++i) {
+        insert(&t, i);
+    }
+
+    const clock_t end = clock();
+    const double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("%lf", time_spent);
 }

@@ -139,10 +139,18 @@ void rightRotate(RBTree* const tree, Node* const node) {
 #define getColor(node) (node==NULL?(black):(node->color))
 #define setColor(node, col) ((node==NULL)?(node->color):(node->color=col))
 
+__attribute__((always_inline))
 inline void case1(RBTree*, Node*);
+
+__attribute__((always_inline))
 inline void case2(RBTree*, Node*);
+
 void case3(RBTree*, Node*);
+
+__attribute__((always_inline))
 inline void case4(RBTree*, Node*);
+
+__attribute__((always_inline))
 inline void case5(RBTree*, Node*);
 
 __attribute__((always_inline))
@@ -162,8 +170,7 @@ inline void case2(RBTree* tree, Node* node) {
     case3(tree, node);
 }
 
-
-inline void case3(RBTree* tree, Node* node) {
+void case3(RBTree* tree, Node* node) {
     if (getColor(uncle(node)) == red) {
         setColor(node, red);
         setColor(granny(node), red);

@@ -3,18 +3,20 @@
 #include <stdlib.h>
 #include <time.h>
 
-typedef int NodeType;
+typedef struct {
+    int key;
+} NodeType;
 
 int less(const NodeType a, const NodeType b) {
-    return a < b;
+    return a.key < b.key;
 }
 
 int eq(const NodeType a, const NodeType b) {
-    return a == b;
+    return a.key == b.key;
 }
 
 int bigger(const NodeType a, const NodeType b) {
-    return a > b;
+    return a.key > b.key;
 }
 
 typedef enum Color {
@@ -212,21 +214,21 @@ Node* insert(RBTree* tree, const NodeType val) {
     Node* me = NULL;
 
     do {
-        if (parent->value == val) {
+        if (eq(parent->value, val)) {
             me = parent;
-        } else if (parent->value < val) {
+        } else if (less(parent->value, val)) {
             me = parent->right;
         } else {
             me = parent->left;
         }
     } while (me != NULL && me != parent && (parent = me, 1));
 
-    if (parent->value == val) {
+    if (eq(parent->value, val)) {
         free(node);
         return parent;
     }
 
-    if (parent->value < val) {
+    if (less(parent->value, val)) {
         parent->right = node;
     } else {
         parent->left = node;
@@ -241,9 +243,9 @@ Node* insert(RBTree* tree, const NodeType val) {
 const Node* find(const RBTree* const tree, const NodeType key) {
     const Node* me = tree->root;
     do {
-        if (me->value < key) me = me->right;
-        if (me->value > key) me = me->left;
-    } while (me != NULL && me->value != key);
+        if (less(me->value, key)) me = me->right;
+        if (bigger(me->value, key)) me = me->left;
+    } while (me != NULL && !eq(me->value, key));
 
     return me;
 }
@@ -256,7 +258,7 @@ int main() {
     const clock_t begin = clock();
 
     for (int i = 0; i < 100000000; ++i) {
-        insert(&t, i);
+        insert(&t, (NodeType){.key = i});
     }
 
     const clock_t end = clock();

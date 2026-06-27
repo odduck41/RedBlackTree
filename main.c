@@ -1,5 +1,5 @@
-#include <assert.h>
-#include <complex.h>
+// #include <assert.h>
+// #include <complex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -479,14 +479,14 @@ void erase(RBTree* tree, const NodeType key) {
     delete_fixup(tree, node);
 }
 
-void inorder(Node* x) {
+void inorder(const Node* const x) {
     if (x == NULL) return;
     inorder(x->left);
     printf("%d ", x->value.key);
     inorder(x->right);
 }
 
-void print(RBTree* t) {
+void print(const RBTree* const t) {
     inorder(t->root);
 }
 
@@ -495,22 +495,22 @@ int main() {
     t.root = NULL;
     const clock_t begin = clock();
 
-    char c;
-    do {
-        scanf("%c", &c);
-        if (c == 'i') {
-            int x;
-            scanf("%d", &x);
-            insert(&t, (NodeType){x});
-        } else if (c == 'd') {
-            int x;
-            scanf("%d", &x);
-            erase(&t, (NodeType){x});
-        } else if (c == 'p') {
-            print(&t);
-            printf("\n");
-        }
-    } while (c != 's');
+    // char c;
+    // do {
+    //     scanf("%c", &c);
+    //     if (c == 'i') {
+    //         int x;
+    //         scanf("%d", &x);
+    //         insert(&t, (NodeType){x});
+    //     } else if (c == 'd') {
+    //         int x;
+    //         scanf("%d", &x);
+    //         erase(&t, (NodeType){x});
+    //     } else if (c == 'p') {
+    //         print(&t);
+    //         printf("\n");
+    //     }
+    // } while (c != 's');
 
     const clock_t end = clock();
     const double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;

@@ -196,7 +196,7 @@ void erase(RBTree *tree, const NodeType key) {
     }
 
     Node* del = deleter(node);
-    move(del, node);
+    move(del, node); // MEMORY LEAK!!!
     node = del;
 
     delete_fixup(tree, node);

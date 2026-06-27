@@ -1,6 +1,7 @@
 #ifndef RBTREE_RBTREE_H
 #define RBTREE_RBTREE_H
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     int key;
@@ -116,7 +117,6 @@ inline void insert_case5(RBTree* tree, const Node* node) {
     } else {
         leftRotate(tree, granny(node));
     }
-    insert_case1(tree, node->parent);
 }
 
 __attribute__((always_inline))
@@ -130,7 +130,8 @@ Node* find(const RBTree* tree, NodeType key);
 
 __attribute__((always_inline))
 inline void move(const Node* const from, Node* const to) {
-    to->value = from->value;
+    to->value.key = from->value.key;
+    strcpy(to->value.value, from->value.value);
 }
 
 __attribute__((always_inline))
@@ -184,7 +185,7 @@ inline void delete_case1(RBTree* tree, Node* node) {
         if (child(node) != NULL) {
             child(node)->parent = node->parent;
         }
-        free(node);
+        deallocator(node);
         return;
     }
 
@@ -220,7 +221,7 @@ inline void delete_case2(RBTree* tree, Node* node) {
 __attribute__((always_inline))
 inline void delete_case3(RBTree* tree, Node* node) {
     if (node->parent == NULL) {
-        free(node);
+        deallocator(node);
         tree->root = NULL;
         return;
     }
@@ -257,7 +258,7 @@ inline void delete_case6(RBTree* tree, Node* node) {
         if (node->parent->left == node) node->parent->left = NULL;
         if (node->parent->right == node) node->parent->right = NULL;
 
-        free(node);
+        deallocator(node);
         return;
     }
 
@@ -304,7 +305,7 @@ inline void delete_case8(RBTree* tree, Node* node) {
     } else {
         node->parent->right = NULL;
     }
-    free(node);
+    deallocator(node);
 }
 
 __attribute__((always_inline))

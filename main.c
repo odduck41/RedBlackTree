@@ -47,26 +47,27 @@ void leftRotate(RBTree* const tree, Node* const node) {
          Bl  Br    Al  Bl
 */
     if (node == NULL) return;
-    if (node->parent == NULL) return;
+    if (node->right == NULL) return;
 
-    node->parent->right = node->left;
-    if (node->left != NULL)
-        node->left->parent = node->parent;
-
-    node->left = node->parent;
-    node->parent = node->left->parent;
-
-    if (node->parent != NULL) {
-        if (node->parent->left == node->left) {
-            node->parent->left = node;
-        } else {
-            node->parent->right = node;
-        }
+    if (node->parent == NULL) {
+        tree->root = node->right;
+        node->right->parent = NULL;
     } else {
-        tree->root = node;
+        if (node->parent->left == node) {
+            node->parent->left = node->right;
+        } else {
+            node->parent->right = node->right;
+        }
+        node->right->parent = node->parent;
+    }
+    node->parent = node->right;
+
+    node->right = node->parent->left;
+    if (node->right != NULL) {
+        node->right->parent = node;
     }
 
-    node->left->parent = node;
+    node->parent->left = node;
 }
 
 void rightRotate(RBTree* const tree, Node* const node) {
@@ -79,26 +80,26 @@ void rightRotate(RBTree* const tree, Node* const node) {
    Bl  Br                Br  Ar
 */
     if (node == NULL) return;
-    if (node->parent == NULL) return;
+    if (node->left == NULL) return;
 
-    node->parent->left = node->right;
-    if (node->right != NULL)
-        node->right->parent = node->parent;
-
-    node->right = node->parent;
-    node->parent = node->right->parent;
-
-    if (node->parent != NULL) {
-        if (node->parent->left == node->right) {
-            node->parent->left = node;
-        } else {
-            node->parent->right = node;
-        }
+    if (node->parent == NULL) {
+        tree->root = node->left;
+        node->left->parent = NULL;
     } else {
-        tree->root = node;
+        if (node->parent->left == node) {
+            node->parent->left = node->left;
+        } else {
+            node->parent->right = node->left;
+        }
+        node->left->parent = node->parent;
     }
+    node->parent = node->left;
 
-    node->right->parent = node;
+    node->left = node->parent->right;
+    if (node->left != NULL) {
+        node->left->parent = node;
+    }
+    node->parent->right = node;
 }
 
 __attribute__((always_inline))
@@ -139,6 +140,7 @@ inline void case5(RBTree*, const Node*);
 __attribute__((always_inline))
 inline void case1(RBTree* tree, Node* node) {
     if (node->parent == NULL) {
+        tree->root = node;
         node->color = black;
         return;
     }
@@ -170,10 +172,10 @@ inline void case4(RBTree* tree, Node* node) {
     if (granny(node) == NULL) __builtin_unreachable();
 
     if (granny(node)->left == node->parent && node->parent->right == node) {
-        leftRotate(tree, node);
+        leftRotate(tree, node->parent);
         node = node->left;
     } else if (granny(node)->right == node->parent && node->parent->left == node) {
-        rightRotate(tree, node);
+        rightRotate(tree, node->parent);
         node = node->right;
     }
     case5(tree, node);
@@ -186,9 +188,9 @@ inline void case5(RBTree* tree, const Node* node) {
     setColor(node->parent, black);
     setColor(granny(node), red);
     if (granny(node)->left == node->parent) {
-        rightRotate(tree, node->parent);
+        rightRotate(tree, granny(node));
     } else {
-        leftRotate(tree, node->parent);
+        leftRotate(tree, granny(node));
     }
     case1(tree, node->parent);
 }
@@ -199,13 +201,12 @@ inline void fixup(RBTree* tree, Node* node) {
 }
 
 Node* insert(RBTree* tree, const NodeType val) {
-    Node* node = malloc(sizeof(Node));
+    Node* node = (Node*)malloc(sizeof(Node));
     node->value = val;
-    node->color = red;
+    setColor(node, red);
     node->parent = node->left = node->right = NULL;
 
     if (tree->root == NULL) {
-        tree->root = node;
         fixup(tree, node);
         return node;
     }
@@ -240,8 +241,8 @@ Node* insert(RBTree* tree, const NodeType val) {
     return node;
 }
 
-const Node* find(const RBTree* const tree, const NodeType key) {
-    const Node* me = tree->root;
+Node* find(const RBTree* const tree, const NodeType key) {
+    Node* me = tree->root;
     do {
         if (less(me->value, key)) me = me->right;
         if (bigger(me->value, key)) me = me->left;
@@ -250,7 +251,120 @@ const Node* find(const RBTree* const tree, const NodeType key) {
     return me;
 }
 
+void move(const Node* const from, Node* const to) {
+    to->value = from->value;
+}
 
+Node* deleter(Node* const me) {
+    if (me->left != NULL) {
+        Node* del = me->left;
+        while (del->right != NULL) del = del->right;
+        return del;
+    }
+    if (me->right != NULL) {
+        Node* del = me->right;
+        while (del->left != NULL) del = del->left;
+        return del;
+    }
+
+    return me;
+}
+
+Node* child(const Node* const node) {
+    if (node->left != NULL) return node->left;
+    return node->right;
+}
+
+Node* sibling(const Node* const node) {
+    if (node == NULL) return NULL;
+    if (node->parent == NULL) return NULL;
+    if (node->parent->left == node) return node->parent->right;
+    return node->parent->left;
+}
+
+inline void case1d(RBTree*, Node*);
+inline void case2d(RBTree*, Node*);
+inline void case3d(RBTree*, Node*);
+inline void case4d(RBTree*, Node*);
+
+inline void case1d(RBTree* tree, Node* node) {
+    if (node == NULL) __builtin_unreachable();
+
+    if (getColor(node) == red) {
+        if (node->parent->left == node) {
+            node->parent->left = child(node);
+        } else {
+            node->parent->right = child(node);
+        }
+        if (child(node) != NULL) {
+            child(node)->parent = node->parent;
+        }
+        free(node);
+        return;
+    }
+    case2d(tree, node);
+}
+
+inline void case2d(RBTree* tree, Node* node) {
+    if (getColor(child(node)) == red) {
+        setColor(child(node), black);
+        if (node->parent == NULL) {
+            child(node)->parent = NULL;
+            tree->root = child(node);
+            free(node);
+            return;
+        }
+        if (node->parent->left == node) {
+            node->parent->left = child(node);
+        } else {
+            node->parent->right = child(node);
+        }
+
+        child(node)->parent = node->parent;
+        return;
+    }
+
+    case3d(tree, node);
+}
+
+inline void case3d(RBTree* tree, Node* node) {
+    if (node->parent == NULL) {
+        child(node)->parent = NULL;
+        tree->root = child(node);
+        free(node);
+        return;
+    }
+    if (node->parent->left == node) {
+        node->parent->left = child(node);
+    } else {
+        node->parent->right = child(node);
+    }
+    if (child(node) != NULL) {
+        child(node)->parent = node->parent;
+        case4d(tree, node);
+    }
+}
+
+inline void case4d(RBTree* tree, Node* node) {
+
+}
+
+void fixdown(RBTree* tree, Node* node) {
+    case1d(tree, node);
+}
+
+void erase(RBTree* tree, const NodeType key) {
+    Node* node = find(tree, key);
+    if (node == NULL) {
+        return;
+    }
+
+    Node* del = deleter(node);
+    move(del, node);
+    node = del;
+
+    fixdown(tree, node);
+}
 
 int main() {
     RBTree t;

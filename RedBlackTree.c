@@ -155,7 +155,7 @@ inline Node * insert(RBTree * rb_tree, const ValueType val) {
     return node;
 }
 
-inline void insertFixup(RBTree * rb_tree, Node * node) {
+inline void insertFixup(RBTree * tree, Node * node) {
     while (getColor(node->parent) == red) {
         Node * u = uncle(node);
         Node * g = grandparent(node);
@@ -170,28 +170,29 @@ inline void insertFixup(RBTree * rb_tree, Node * node) {
             if (node->parent == g->left) {
                 if (node == node->parent->right) {
                     node = node->parent;
-                    Node * now = leftRotate(node);
-                    if (now->parent == NULL) rb_tree->root = now;
+                    Node * rotate = leftRotate(node);
+                    if (rotate->parent == NULL) tree->root = rotate;
                 }
                 setColor(node->parent, black);
                 setColor(g, red);
-                Node * now = rightRotate(g);
-                if (now->parent == NULL) rb_tree->root = now;
+                Node * rotate = rightRotate(g);
+                if (rotate->parent == NULL) tree->root = rotate;
             } else {
                 if (node->parent == g->right) {
                     if (node == node->parent->right) {
                         node = node->parent;
-                        Node * now = rightRotate(node);
-                        if (now->parent == NULL) rb_tree->root = now;
+                        Node * rotate = rightRotate(node);
+                        if (rotate->parent == NULL) tree->root = rotate;
                     }
                     setColor(node->parent, black);
                     setColor(g, red);
-                    Node * now = leftRotate(g);
-                    if (now->parent == NULL) rb_tree->root = now;
+                    Node * rotate = leftRotate(g);
+                    if (rotate->parent == NULL) tree->root = rotate;
                 }
             }
         }
     }
+    setColor(tree->root, black);
 }
 
 
@@ -203,6 +204,65 @@ Node * find(const RBTree * const tree, const ValueType val) {
     }
 
     return x;
+}
+
+void deleteFixup(RBTree * tree, Node * node) {
+    while (node != tree->root && getColor(node) == black) {
+        Node * s = sibling(node);
+        if (node == node->parent->left) {
+            if (getColor(s) == red) {
+                setColor(s, black);
+                setColor(node->parent, red);
+                Node * rotate = leftRotate(node->parent);
+                if (rotate->parent == NULL) tree->root = rotate;
+                s = sibling(node);
+            }
+            if (getColor(s->left) == black && getColor(s->right) == black) {
+                setColor(s, red);
+                node = node->parent;
+            } else {
+                if (getColor(s->right) == black) {
+                    setColor(s->left, black);
+                    setColor(s, red);
+                    Node * rotate = rightRotate(s);
+                    if (rotate->parent == NULL) tree->root = rotate;
+                    s = sibling(node);
+                }
+                setColor(s, getColor(node->parent));
+                setColor(s->parent, black);
+                setColor(s->right, black);
+                Node * rotate = leftRotate(node->parent);
+                if (rotate->parent == NULL) tree->root = rotate;
+                node = tree->root;
+            }
+        } else {
+            if (getColor(s) == red) {
+                setColor(s, black);
+                setColor(node->parent, red);
+                Node * rotate = rightRotate(node->parent);
+                if (rotate->parent == NULL) tree->root = rotate;
+                s = sibling(node);
+            }
+            if (getColor(s->right) == black && getColor(s->left) == black) {
+                setColor(s, red);
+                node = node->parent;
+            } else {
+                if (getColor(s->left) == black) {
+                    setColor(s->right, black);
+                    setColor(s, red);
+                    Node * rotate = leftRotate(s);
+                    if (rotate->parent == NULL) tree->root = rotate;
+                    s = sibling(node);
+                }
+                setColor(s, getColor(node->parent));
+                setColor(s->parent, black);
+                setColor(s->left, black);
+                Node * rotate = rightRotate(node->parent);
+                if (rotate->parent == NULL) tree->root = rotate;
+                node = tree->root;
+            }
+        }
+    }
 }
 
 void delete(RBTree * tree, const ValueType val) {
@@ -220,8 +280,9 @@ void delete(RBTree * tree, const ValueType val) {
     }
 
     swapValues(x, y);
-
-    deleteFixup(tree, x);
+    x = y;
+    if (getColor(x) == black)
+        deleteFixup(tree, x);
 
     destroy(x);
 }

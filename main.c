@@ -1,3 +1,4 @@
-//
-// Created by Lev Dymchenko on 01.07.2026.
-//
+
+int main() {
+    return 0;
+}

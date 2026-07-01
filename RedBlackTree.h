@@ -10,9 +10,9 @@ typedef struct ValueType {
     char* value;
 } ValueType;
 
-bool less(ValueType, ValueType);
-bool eq(ValueType, ValueType);
-bool bigger(ValueType, ValueType);
+int less(ValueType, ValueType);
+int eq(ValueType, ValueType);
+int bigger(ValueType, ValueType);
 
 typedef enum Color {
     black = 0,
@@ -23,7 +23,7 @@ typedef struct Node Node;
 typedef struct Node {
     Node * parent;
     ValueType vertex;
-    Color color_;
+    Color color;
     Node * left;
     Node * right;
 } Node;
@@ -34,8 +34,26 @@ void destroy(Node *);
 Node * leftRotate(Node *);
 Node * rightRotate(Node *);
 
+Color getColor(const Node *);
+Color setColor(Node *, Color);
+
+Node * grandparent(const Node *);
+Node * uncle(const Node *);
+
+Node * sibling(const Node *);
+
 typedef struct {
     Node * root;
 } RBTree;
+
+void insertFixup(RBTree *, Node*);
+Node * insert(RBTree *, ValueType);
+
+Node * find(RBTree *, ValueType);
+
+void deleteFixup(RBTree *, Node *);
+void delete(RBTree *, ValueType);
+
+
 
 #endif //REDBLACKTREE_H

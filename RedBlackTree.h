@@ -49,7 +49,7 @@ typedef struct {
 void insertFixup(RBTree *, Node*);
 Node * insert(RBTree *, ValueType);
 
-Node * find(RBTree *, ValueType);
+Node * find(const RBTree *, ValueType);
 
 void deleteFixup(RBTree *, Node *);
 void delete(RBTree *, ValueType);

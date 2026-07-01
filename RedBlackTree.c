@@ -129,8 +129,8 @@ inline Node * insert(RBTree * rb_tree, const ValueType value) {
     Node * xp = NULL;
     while (x != NULL) {
         xp = x;
-        if (less(x->vertex, value)) x = x->left;
-        else x = x->right;
+        if (less(x->vertex, value)) x = x->right;
+        else x = x->left;
     }
 
     Node * node = create(value);
@@ -185,6 +185,17 @@ inline void insertFixup(RBTree * rb_tree, Node * node) {
             }
         }
     }
+}
+
+
+Node * find(const RBTree * const tree, const ValueType val) {
+    Node * x = tree->root;
+    while (x != NULL && !eq(x->vertex, val)) {
+        if (less(x->vertex, val)) x = x->right;
+        else x = x->left;
+    }
+
+    return x;
 }
 
 // NOLINTEND(modernize-use-nullptr)

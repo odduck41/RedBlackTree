@@ -124,22 +124,29 @@ inline Node * sibling(const Node * node) {
     return node->parent->left;
 }
 
-inline Node * insert(RBTree * rb_tree, const ValueType value) {
+inline void swapValues(Node * a, Node * b) {
+    if (a == NULL || b == NULL) return;
+    const ValueType vertex = a->vertex;
+    a->vertex = b->vertex;
+    b->vertex = vertex;
+}
+
+inline Node * insert(RBTree * rb_tree, const ValueType val) {
     Node * x = rb_tree->root;
     Node * xp = NULL;
     while (x != NULL) {
         xp = x;
-        if (less(x->vertex, value)) x = x->right;
+        if (less(x->vertex, val)) x = x->right;
         else x = x->left;
     }
 
-    Node * node = create(value);
+    Node * node = create(val);
 
     node->parent = xp;
     if (xp == NULL) {
         rb_tree->root = node;
     } else {
-        if (less(value, xp->vertex)) xp->left = node;
+        if (less(val, xp->vertex)) xp->left = node;
         else xp->right = node;
     }
 
@@ -196,6 +203,27 @@ Node * find(const RBTree * const tree, const ValueType val) {
     }
 
     return x;
+}
+
+void delete(RBTree * tree, const ValueType val) {
+    Node * x = find(tree, val);
+
+    if (x == NULL) return;
+
+    Node * y = NULL;
+    if (x->left != NULL) {
+        y = x->left;
+        while (y->right != NULL) y= y->right;
+    } else if (x->right != NULL) {
+        y = x->right;
+        while (y->left != NULL) y = y->left;
+    }
+
+    swapValues(x, y);
+
+    deleteFixup(tree, x);
+
+    destroy(x);
 }
 
 // NOLINTEND(modernize-use-nullptr)

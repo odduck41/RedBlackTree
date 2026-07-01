@@ -42,6 +42,8 @@ Node * uncle(const Node *);
 
 Node * sibling(const Node *);
 
+void swapValues(Node *, Node *);
+
 typedef struct {
     Node * root;
 } RBTree;

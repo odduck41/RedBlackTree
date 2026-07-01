@@ -131,26 +131,30 @@ inline void swapValues(Node * a, Node * b) {
     b->vertex = vertex;
 }
 
-inline Node * insert(RBTree * rb_tree, const ValueType val) {
-    Node * x = rb_tree->root;
+inline Node * insert(RBTree * tree, const ValueType val) {
+    Node * x = tree->root;
     Node * xp = NULL;
     while (x != NULL) {
         xp = x;
         if (less(x->vertex, val)) x = x->right;
-        else x = x->left;
+        else if (bigger(x->vertex, val)) x = x->left;
+        else if (eq(x->vertex, val)) {
+            if (tree->multiset) x = x->right;
+            else return x;
+        }
     }
 
     Node * node = create(val);
 
     node->parent = xp;
     if (xp == NULL) {
-        rb_tree->root = node;
+        tree->root = node;
     } else {
         if (less(val, xp->vertex)) xp->left = node;
         else xp->right = node;
     }
 
-    insertFixup(rb_tree, node);
+    insertFixup(tree, node);
 
     return node;
 }
@@ -179,7 +183,7 @@ inline void insertFixup(RBTree * tree, Node * node) {
                 if (rotate->parent == NULL) tree->root = rotate;
             } else {
                 if (node->parent == g->right) {
-                    if (node == node->parent->right) {
+                    if (node == node->parent->left) {
                         node = node->parent;
                         Node * rotate = rightRotate(node);
                         if (rotate->parent == NULL) tree->root = rotate;
@@ -196,7 +200,7 @@ inline void insertFixup(RBTree * tree, Node * node) {
 }
 
 
-Node * find(const RBTree * const tree, const ValueType val) {
+inline Node * find(const RBTree * const tree, const ValueType val) {
     Node * x = tree->root;
     while (x != NULL && !eq(x->vertex, val)) {
         if (less(x->vertex, val)) x = x->right;
@@ -206,7 +210,7 @@ Node * find(const RBTree * const tree, const ValueType val) {
     return x;
 }
 
-void deleteFixup(RBTree * tree, Node * node) {
+inline void deleteFixup(RBTree * tree, const Node * node) {
     while (node != tree->root && getColor(node) == black) {
         Node * s = sibling(node);
         if (node == node->parent->left) {
@@ -265,7 +269,7 @@ void deleteFixup(RBTree * tree, Node * node) {
     }
 }
 
-void delete(RBTree * tree, const ValueType val) {
+inline void delete(RBTree * tree, const ValueType val) {
     Node * x = find(tree, val);
 
     if (x == NULL) return;
@@ -280,11 +284,30 @@ void delete(RBTree * tree, const ValueType val) {
     }
 
     swapValues(x, y);
-    x = y;
+    if (y != NULL)
+        x = y;
     if (getColor(x) == black)
         deleteFixup(tree, x);
 
+    if (x == NULL) __builtin_unreachable();
+    if (x->parent != NULL && x->parent->left == x)
+        x->parent->left = NULL;
+    else if (x->parent != NULL && x->parent->right == x)
+        x->parent->right = NULL;
+    else
+        tree->root = NULL;
+
     destroy(x);
+}
+
+void inorder(const Node * const v, void(*f)(const Node * const)) {
+    if (v == NULL) return;
+
+    inorder(v->left, f);
+
+    if (f != NULL) f(v);
+
+    inorder(v->right, f);
 }
 
 // NOLINTEND(modernize-use-nullptr)

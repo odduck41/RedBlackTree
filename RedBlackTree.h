@@ -46,6 +46,7 @@ void swapValues(Node *, Node *);
 
 typedef struct {
     Node * root;
+    int multiset;
 } RBTree;
 
 void insertFixup(RBTree *, Node*);
@@ -53,9 +54,10 @@ Node * insert(RBTree *, ValueType);
 
 Node * find(const RBTree *, ValueType);
 
-void deleteFixup(RBTree *, Node *);
+void deleteFixup(RBTree *, const Node *);
 void delete(RBTree *, ValueType);
 
 
+void inorder(const Node *, void(*)(const Node *) );
 
 #endif //REDBLACKTREE_H

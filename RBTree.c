@@ -35,7 +35,7 @@ void deallocator(void* node) {
 }
 
 void leftRotate(RBTree * const tree, Node * const node) {
-    /*
+/*
         |               |
         A               B
       /   \           /   \
@@ -68,7 +68,7 @@ void leftRotate(RBTree * const tree, Node * const node) {
 }
 
 void rightRotate(RBTree * const tree, Node * const node) {
-    /*
+/*
         |               |
         A               B
       /   \           /   \

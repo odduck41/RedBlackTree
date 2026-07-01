@@ -28,7 +28,7 @@ typedef struct Node {
     Node * right;
 } Node;
 
-Node * create(int, const char *);
+Node * create(ValueType);
 void destroy(Node *);
 
 Node * leftRotate(Node *);

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// NOLINTBEGIN(modernize-use-nullptr)
+
 inline int less(const ValueType a, const ValueType b) {
     return a.key < b.key;
 }
@@ -18,11 +20,14 @@ inline int bigger(const ValueType a, const ValueType b) {
     return a.key > b.key;
 }
 
-inline Node * create(const int key, const char* value) {
+inline Node * create(const ValueType v) {
     Node* p = malloc(sizeof(Node));
-    p->vertex.key = key;
-    p->vertex.value = malloc(strlen(value) * sizeof(char));
-    strcpy(p->vertex.value, value);
+    p->left = p->right = p->parent = NULL;
+    p->color = red;
+
+    p->vertex.key = v.key;
+    p->vertex.value = malloc(strlen(v.value) * sizeof(char));
+    strcpy(p->vertex.value, v.value);
     return p;
 }
 
@@ -91,30 +96,95 @@ inline Node * rightRotate(Node * me) {
     return pivot;
 }
 
-Color getColor(const Node * const node) {
+inline Color getColor(const Node * const node) {
     if (node == NULL) return black;
     return node->color;
 }
 
-Color setColor(Node * node, const Color color) {
+inline Color setColor(Node * node, const Color color) {
     if (node == NULL) return black;
     return (node->color = color);
 }
 
-Node * grandparent(const Node * node) {
-    if (node->parent == NULL) return NULL; // NOLINT
+inline Node * grandparent(const Node * node) {
+    if (node->parent == NULL) return NULL;
     return node->parent->parent;
 }
 
-Node * uncle(const Node * node) {
-    if (node->parent == NULL) return NULL; //NOLINT
-    if (node->parent->parent == NULL) return NULL; // NOLINT
+inline Node * uncle(const Node * node) {
+    if (node->parent == NULL) return NULL;
+    if (node->parent->parent == NULL) return NULL;
     if (node->parent->parent->left == node->parent) return node->parent->parent->right;
     return node->parent->parent->left;
 }
 
-Node * sibling(const Node * node) {
-    if (node->parent == NULL) return NULL; // NOLINT
+inline Node * sibling(const Node * node) {
+    if (node->parent == NULL) return NULL;
     if (node->parent->left == node) return node->parent->right;
     return node->parent->left;
 }
+
+inline Node * insert(RBTree * rb_tree, const ValueType value) {
+    Node * x = rb_tree->root;
+    Node * xp = NULL;
+    while (x != NULL) {
+        xp = x;
+        if (less(x->vertex, value)) x = x->left;
+        else x = x->right;
+    }
+
+    Node * node = create(value);
+
+    node->parent = xp;
+    if (xp == NULL) {
+        rb_tree->root = node;
+    } else {
+        if (less(value, xp->vertex)) xp->left = node;
+        else xp->right = node;
+    }
+
+    insertFixup(rb_tree, node);
+
+    return node;
+}
+
+inline void insertFixup(RBTree * rb_tree, Node * node) {
+    while (getColor(node->parent) == red) {
+        Node * u = uncle(node);
+        Node * g = grandparent(node);
+        if (g == NULL) __builtin_unreachable();
+
+        if (getColor(u) == red) {
+            setColor(node->parent, black);
+            setColor(u, black);
+            setColor(g, red);
+            node = g;
+        } else {
+            if (node->parent == g->left) {
+                if (node == node->parent->right) {
+                    node = node->parent;
+                    Node * now = leftRotate(node);
+                    if (now->parent == NULL) rb_tree->root = now;
+                }
+                setColor(node->parent, black);
+                setColor(g, red);
+                Node * now = rightRotate(g);
+                if (now->parent == NULL) rb_tree->root = now;
+            } else {
+                if (node->parent == g->right) {
+                    if (node == node->parent->right) {
+                        node = node->parent;
+                        Node * now = rightRotate(node);
+                        if (now->parent == NULL) rb_tree->root = now;
+                    }
+                    setColor(node->parent, black);
+                    setColor(g, red);
+                    Node * now = leftRotate(g);
+                    if (now->parent == NULL) rb_tree->root = now;
+                }
+            }
+        }
+    }
+}
+
+// NOLINTEND(modernize-use-nullptr)
